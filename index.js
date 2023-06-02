@@ -33,9 +33,17 @@ async function run() {
         // await client.connect();
 
 
+        const userCollection = client.db("bistoDb").collection("user");
         const menuCollection = client.db("bistoDb").collection("menu");
         const reviewsCollection = client.db("bistoDb").collection("reviews");
         const cartsCollection = client.db("bistoDb").collection("carts");
+
+        // user apis
+        app.post('/user', async (req, res) => {
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
 
         // menu api
         app.get('/menu', async (req, res) => {
@@ -49,29 +57,32 @@ async function run() {
             res.send(result)
         })
 
-        // carts api
-        app.get('/carts',async(req,res)=>{
+        // carts apis
+        app.get('/carts', async (req, res) => {
             const email = req.query.email;
-            if(!email){
+            if (!email) {
                 res.send([])
-            }
-            else{
-                const query= {email}
-                const result= await cartsCollection.find(query).toArray();
+            } else {
+                const query = {
+                    email
+                }
+                const result = await cartsCollection.find(query).toArray();
                 res.send(result);
             }
         })
 
-        app.post('/carts', async(req,res)=>{
+        app.post('/carts', async (req, res) => {
             const item = req.body;
             console.log(item)
             const result = await cartsCollection.insertOne(item);
-            res.send(result) 
+            res.send(result)
         })
 
-        app.delete('/carts/:id',async(req,res)=>{
+        app.delete('/carts/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)};
+            const query = {
+                _id: new ObjectId(id)
+            };
             const result = await cartsCollection.deleteOne(query);
             res.send(result)
         })
