@@ -39,10 +39,39 @@ async function run() {
         const cartsCollection = client.db("bistoDb").collection("carts");
 
         // user apis
+        app.get('/users', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result)
+        })
+
         app.post('/user', async (req, res) => {
             const user = req.body;
+            const query = {
+                email: user.email
+            };
+            const existingUser = await userCollection.findOne(query);
+            if (existingUser) {
+                return res.send('user already exists')
+            }
             const result = await userCollection.insertOne(user);
             res.send(result)
+        })
+
+        app.patch('/user/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = {
+                _id: new ObjectId(id)
+            };
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                },
+            };
+
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
         })
 
         // menu api
