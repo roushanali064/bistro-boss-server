@@ -59,7 +59,7 @@ async function run() {
 
         app.patch('/user/admin/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id);
+            
             const filter = {
                 _id: new ObjectId(id)
             };
@@ -72,6 +72,13 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc);
             res.send(result);
 
+        })
+
+        app.delete('/user/:id',async(req,res)=>{
+            const id = req.params.id;
+            const query={_id: new ObjectId(id)}
+            const result=await userCollection.deleteOne(query);
+            res.send(result)
         })
 
         // menu api
