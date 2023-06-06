@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json());
 const verifyJwt = (req, res, next) => {
     const authorization = req.headers.authorization;
-    if (authorization) {
+    if (!authorization) {
         return res.status(401).send({
             error: true,
             message: 'unauthorized'
@@ -68,6 +68,16 @@ async function run() {
                 token
             })
         })
+
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await userCollection.findOne(query);
+            if (user?.role !== 'admin') {
+              return res.status(403).send({ error: true, message: 'forbidden message' });
+            }
+            next();
+          }
 
         // user apis
         app.get('/users', async (req, res) => {
@@ -133,6 +143,19 @@ async function run() {
             res.send(result)
         })
 
+        app.post('/menu', verifyJwt, verifyAdmin, async(req,res)=>{
+            const newItem = req.body;
+            const result = await menuCollection.insertOne(newItem);
+            res.send(result)
+        })
+
+        app.delete('/menu/:id', verifyJwt, verifyAdmin, async(req,res)=>{
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)};
+            const result = await menuCollection.deleteOne(query);
+            res.send(result)
+        })
+
         // reviews api
         app.get('/reviews', async (req, res) => {
             const result = await reviewsCollection.find().toArray();
@@ -140,17 +163,22 @@ async function run() {
         })
 
         // carts apis
-        app.get('/carts', async (req, res) => {
+        app.get('/carts', verifyJwt, async (req, res) => {
             const email = req.query.email;
             if (!email) {
-                res.send([])
-            } else {
+                return res.send([])
+            }
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+              return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+           
                 const query = {
                     email
                 }
                 const result = await cartsCollection.find(query).toArray();
                 res.send(result);
-            }
+            
         })
 
         app.post('/carts', async (req, res) => {
